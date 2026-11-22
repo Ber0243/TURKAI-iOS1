@@ -1,0 +1,23 @@
+
+name: Inspect TÜRKAİ source
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract and inspect ZIP
+        run: |
+          mkdir extracted
+          unzip -q TURKAI_GUNCEL7.zip -d extracted
+          echo "=== FILE LIST ==="
+          find extracted -maxdepth 4 -type f | sort | head -300
+          echo "=== PACKAGE FILES ==="
+          find extracted -name package.json -type f -print
+          echo "=== HTML TITLES ==="
+          grep -RhoE '<title>[^<]+' extracted --include='*.html' | head -50
