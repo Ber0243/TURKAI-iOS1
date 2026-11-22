@@ -1,0 +1,86 @@
+
+name: Build TURKAI iOS Native
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract source
+        run: |
+          unzip -q TURKAI_GUNCEL7.zip -d source
+          mkdir -p app/www
+          cp -R source/. app/www/
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Capacitor and plugins
+        run: |
+          cd app
+          npm init -y
+          npm install @capacitor/core @capacitor/ios
+          npm install @capacitor/camera
+          npm install @capacitor/geolocation
+          npm install @capacitor/clipboard
+          npm install @capacitor/local-notifications
+          npm install @capacitor/push-notifications
+          npm install @capacitor-community/contacts
+          npm install @capacitor-community/speech-recognition
+          npm install -D @capacitor/cli
+
+      - name: Configure Capacitor
+        run: |
+          cd app
+          npx cap init "TÜRKAİ" "com.berat.turkai" --web-dir www
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Configure iOS permissions
+        run: |
+          PLIST="app/ios/App/App/Info.plist"
+
+          add_permission() {
+            KEY="$1"
+            VALUE="$2"
+
+            /usr/libexec/PlistBuddy \
+              -c "Add :$KEY string $VALUE" "$PLIST" \
+              2>/dev/null || \
+            /usr/libexec/PlistBuddy \
+              -c "Set :$KEY $VALUE" "$PLIST"
+          }
+
+          add_permission NSCameraUsageDescription "TÜRKAİ kamera özelliği için erişim ister."
+          add_permission NSPhotoLibraryUsageDescription "TÜRKAİ fotoğraf seçmek için erişim ister."
+          add_permission NSPhotoLibraryAddUsageDescription "TÜRKAİ fotoğraf kaydetmek için erişim ister."
+          add_permission NSMicrophoneUsageDescription "TÜRKAİ sesli komutlar için mikrofon erişimi ister."
+          add_permission NSSpeechRecognitionUsageDescription "TÜRKAİ konuşmayı metne dönüştürmek için izin ister."
+          add_permission NSLocationWhenInUseUsageDescription "TÜRKAİ konum özellikleri için erişim ister."
+          add_permission NSContactsUsageDescription "TÜRKAİ kişi özellikleri için rehber erişimi ister."
+
+      - name: Build iOS
+        run: |
+          cd app
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload iOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: TURKAI-iOS-native-build
+          path: app/build/Build/Products/Release-iphoneos/
