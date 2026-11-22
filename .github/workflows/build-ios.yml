@@ -15,8 +15,8 @@ jobs:
       - name: Extract source
         run: |
           unzip -q TURKAI_GUNCEL7.zip -d source
-          mkdir -p app
-          cp -R source/. app/
+          mkdir -p app/www
+          cp -R source/. app/www/
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -33,7 +33,7 @@ jobs:
       - name: Configure Capacitor
         run: |
           cd app
-          npx cap init "TÜRKAİ" "com.berat.turkai" --web-dir .
+          npx cap init "TÜRKAİ" "com.berat.turkai" --web-dir www
           npx cap add ios
           npx cap sync ios
 
