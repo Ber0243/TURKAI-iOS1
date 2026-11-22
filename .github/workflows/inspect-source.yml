@@ -1,5 +1,5 @@
 
-name: Inspect TÜRKAİ source
+name: Inspect TÜRKAİ details
 
 on:
   workflow_dispatch:
@@ -8,16 +8,21 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Extract and inspect ZIP
+      - name: Extract and inspect source
         run: |
           mkdir extracted
           unzip -q TURKAI_GUNCEL7.zip -d extracted
-          echo "=== FILE LIST ==="
-          find extracted -maxdepth 4 -type f | sort | head -300
-          echo "=== PACKAGE FILES ==="
-          find extracted -name package.json -type f -print
-          echo "=== HTML TITLES ==="
-          grep -RhoE '<title>[^<]+' extracted --include='*.html' | head -50
+
+          echo "===== README-TR.md ====="
+          cat extracted/README-TR.md
+
+          echo "===== index.html ====="
+          sed -n '1,300p' extracted/index.html
+
+          echo "===== ses-uret.html ====="
+          sed -n '1,240p' extracted/ses-uret.html
+
+          echo "===== manifest.webmanifest ====="
+          cat extracted/manifest.webmanifest
