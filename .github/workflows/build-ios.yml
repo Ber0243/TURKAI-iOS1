@@ -1,0 +1,56 @@
+
+name: Build TURKAI iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract source
+        run: |
+          unzip -q TURKAI_GUNCEL7.zip -d source
+          mkdir -p app
+          cp -R source/. app/
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Capacitor
+        run: |
+          cd app
+          npm init -y
+          npm install @capacitor/core @capacitor/ios
+          npm install -D @capacitor/cli
+
+      - name: Configure Capacitor
+        run: |
+          cd app
+          npx cap init "TÜRKAİ" "com.berat.turkai" --web-dir .
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Build iOS
+        run: |
+          cd app
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload iOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: TURKAI-iOS-build
+          path: app/build/Build/Products/Release-iphoneos/
